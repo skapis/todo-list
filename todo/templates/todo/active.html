@@ -1,0 +1,142 @@
+{% extends 'base_todo.html'%}
+{% load static %}
+{% block content %}
+<div class="col-md-12">
+    <div class="card rounded-sm shadow-sm">
+        <div class="card-header">
+            <a class="card-title h4 text-dark">Active tasks</a>
+        </div>
+        <div class="card-body px-3">
+            {% include 'partials/messages.html' %}
+            <form action="{% url 'add_predefined' %}" method="post">
+                <input type="text" name="task_name" class="form-control" id="newtask" placeholder="New task">
+                <div class="row row-cols-4 px-3 py-3" id="newtaskinfo" style="display: none;">
+                    <div class="form-group mr-3">
+                        <label for="Deadline">Deadline</label>
+                        <input type="date" name="deadline" class="form-control">
+                    </div>
+                    <div class="form-group mr-3">
+                        <label for="Deadline">Priority</label>
+                        <select class="form-control" name="priority">
+                            {% for priority in priorities %}
+                            <option name="priority" value="{{priority.name}}">{{priority.name}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group mr-3">
+                        <label for="Deadline">List</label>
+                        <select class="form-control" name="list_name">
+                            {% for list in lists %}
+                            <option name="list_name" value="{{list.name}}">{{list.name}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group mr-3 mb-0 align-self-center">
+                        <input type="Submit" value="Save" class="btn btn-primary mt-3">
+                    </div>
+                </div> 
+            </form>
+            <div class="card rounded-sm mb-3" id="active">
+                <div class="card-header">
+                    <p class="mb-0">Tasks</p>
+                </div>
+                <div class="list-wrapper">
+                    <ul class="list-group list-group-flush">
+                        {% if tasks|length != 0 %}
+                            {% for task in tasks %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div class="widget-content">
+                                        <div class="widget-heading">
+                                            <a class="form-check-label text-dark font-weight-bold task_name_text" id="task_name_{{task.id}}">{{task.name}}</a>
+                                            <label class="fa fa-pen px-3 edit_task_name" id="{{task.id}}"></label>
+                                            <label id="change_input_{{task.id}}" style="display: none;">
+                                                <form action="{% url 'change_task_name' task.id %}" method="post">
+                                                    <div class="input-group border-1">
+                                                        <input type="text" name="new_task_name" value="{{task.name}}" class="form-control rounded-sm task_name_field">
+                                                        <button type="submit" class="border-0 btn-transition btn btn-outline-success">
+                                                            <i class="fa fa-check"></i>
+                                                        </button>
+                                                    </div>
+                                                </form>
+                                            </label>
+                                        </div>
+                                        <div class="widget-subheading">
+                                            <label class="badge badge-warning rounded-lg px-3 my-1 tsk_dld" id="deadline_{{task.id}}">{{task.deadline}}</label>
+                                            <label id="change_deadline_{{task.id}}" style="display: none;">
+                                                <form action="{% url 'change_deadline' task.id %}" method="post">
+                                                    <div class="input-group border-1">
+                                                        <input type="date" name="new_deadline" value="{{task.deadline|date:'Y-m-d'}}" class="form-control rounded-sm task_name_field">
+                                                        <button type="submit" class="border-0 btn-transition btn btn-outline-success">
+                                                            <i class="fa fa-check"></i>
+                                                        </button>
+                                                    </div>
+                                                </form>
+                                            </label>
+                                            <label class="badge badge-{{task.priority_id.color_type}} rounded-lg px-3 my-1 tsk_pri" id="priority_{{task.id}}">{{task.priority_id.name}}</label>
+                                            <label id="change_priority_{{task.id}}" style="display: none;">
+                                                <form action="{% url 'change_priority' task.id %}" method="post">
+                                                    <div class="input-group border-1">
+                                                        <select class="form-control rounded-sm task_name_field" name="new_priority">
+                                                            {% for priority in priorities %}
+                                                            {% if task.priority_id.name == priority.name %}
+                                                                <option name="new_priority" selected value="{{priority.name}}">{{priority.name}}</option>
+                                                            {% else %}
+                                                                <option name="new_priority" value="{{priority.name}}">{{priority.name}}</option>
+                                                            {% endif %}
+                                                            {% endfor %}
+                                                        </select>
+                                                        <button type="submit" class="border-0 btn-transition btn btn-outline-success">
+                                                            <i class="fa fa-check"></i>
+                                                        </button>
+                                                    </div>
+                                                </form>
+                                            </label>
+                                            <label class="badge badge-secondary rounded-lg px-3 my-1 tsk_li" id="list_{{task.id}}">{{task.list_id.name}}</label>
+                                            <label id="change_list_{{task.id}}" style="display: none;">
+                                                <form action="{% url 'change_list' task.id %}" method="post">
+                                                    <div class="input-group border-1">
+                                                        <select class="form-control rounded-sm task_name_field" name="new_list">
+                                                            {% for list in lists %}
+                                                            {% if task.list_id.name == list.name %}
+                                                                <option selected name="new_list" value="{{list.name}}">{{list.name}}</option>
+                                                            {% else %}
+                                                                <option name="new_list" value="{{list.name}}">{{list.name}}</option>
+                                                            {% endif %}
+                                                            {% endfor %}
+                                                        </select>
+                                                        <button type="submit" class="border-0 btn-transition btn btn-outline-success">
+                                                            <i class="fa fa-check"></i>
+                                                        </button>
+                                                    </div>
+                                                </form>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="justify-content-end task-actions">
+                                        {% if task.state_id.name == "Completed" %}
+                                            <label class="badge badge-success rounded-lg px-3 status-label">{{task.state_id}}</label>
+                                            <a href="{% url 'undo_task' task.id %}" class="border-0 btn-transition btn btn-outline-primary fa fa-undo px-3"></a>
+                                        {% else %}
+                                            <label class="badge badge-danger rounded-lg px-3 status-label">{{task.state_id}}</label>
+                                            <a href="{% url 'complete_task' task.id %}" class="border-0 btn-transition btn btn-outline-success fa fa-check px-3"></a>
+                                        {% endif %}
+                                        <a href="{% url 'delete_task' task.id %}" class="border-0 btn-transition btn btn-outline-danger fa fa-trash px-3"></a>
+                                    </div>
+                                </li>                            
+                            {% endfor %}
+                        {% else %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div class="widget-content">
+                                    <div class="widget-heading">
+                                        <a class="form-check-label text-dark font-weight-bold">You have everything done, enjoy your day</a>
+                                    </div>
+                                </div>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
