@@ -5,6 +5,10 @@ from datetime import datetime
 from django.http import HttpResponseRedirect
 
 
+def home(request):
+    return redirect('today')
+
+
 def index(request, id):
     task_list = ToDoList.objects.get(pk=id)
     lists = ToDoList.objects.all()
